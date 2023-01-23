@@ -1,3 +1,6 @@
+import sqlite3
+import json
+from models import Order
 from .metal_requests import get_single_metal
 from .size_requests import get_single_size
 from .style_requests import get_single_style
@@ -5,96 +8,103 @@ from .piece_requests import get_single_piece
 
 ORDERS = [
     {
-    "id": 1,
-    "metalId": 3,
-    "sizeId": 2,
-    "styleId": 3,
-    "pieceId": 1,
-    "timestamp": 1614659931693
-    },
-    {
-    "id": 2,
-    "metalId": 2,
-    "sizeId": 1,
-    "styleId": 3,
-    "pieceId": 2,
-    "timestamp": 1614659931693
+        "id": 1,
+        "metal_id": 3,
+        "size_id": 2,
+        "style_id": 3,
+        "piece_id": 1,
+        "timestamp": 1614659931693.0
     }
 ]
 
-
 def get_all_orders():
     """Returns list of dictionaries stored in ORDERS variable"""
-    return ORDERS
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
 
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.metal_id,
+            o.size_id,
+            o.style_id,
+            o.piece_id,
+            o.timestamp
+        FROM orders o
+        """)
+
+        orders = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+
+            order = Order(row['id'], row['metal_id'], row['size_id'],
+                        row['style_id'], row['piece_id'], row['timestamp'])
+
+            orders.append(order.__dict__)
+
+    return orders
 
 # Function with a single parameter
 def get_single_order(id):
     """arg: int id, function to return a single order dictionary"""
-    # Variable to hold the found order, if it exists
-    requested_order = None
+    #Open the connection to the server
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
 
-    # Iterate the ORDERS list above. Very similar to the
-    # for..of loops you used in JavaScript.
-    for order in ORDERS:
-        # Dictionaries in Python use [] notation to find a key
-        # instead of the dot notation that JavaScript used.
-        if order["id"] == id:
-            requested_order = order
+        db_cursor.execute("""
+        SELECT
+            o.id,
+            o.metal_id,
+            o.size_id,
+            o.style_id,
+            o.piece_id,
+            o.timestamp
+        FROM orders o
+        WHERE o.id = ?
+        """, ( id, ))
 
-            matching_metal = get_single_metal(requested_order["metalId"])
-            requested_order["metal"] = matching_metal
+        # Load the single result into memory
+        data = db_cursor.fetchone()
 
-            matching_size = get_single_size(requested_order["sizeId"])
-            requested_order["size"] = matching_size
+        order = Order(data['id'], data['metal_id'], data['size_id'],
+                        data['style_id'], data['piece_id'], data['timestamp'])
 
-            matching_style = get_single_style(requested_order["styleId"])
-            requested_order["style"] = matching_style
-
-            matching_piece = get_single_piece(requested_order["pieceId"])
-            requested_order["piece"] = matching_piece
-
-            requested_order.pop("metalId")
-            requested_order.pop("sizeId")
-            requested_order.pop("styleId")
-            requested_order.pop("pieceId")
-
-    return requested_order
+    return order.__dict__
 
 
-def create_order(order):
-    """Args: order (json string), returns new dictionary with id property added"""
-    # Get the id value of the last order in the list
-    max_id = ORDERS[-1]["id"]
+def create_order(new_order):
+    """Args: new_order (json string), returns new dictionary with id property added"""
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Orders
+            ( metal_id, size_id, style_id, piece_id, timestamp )
+        VALUES
+            (?, ?, ?, ?, ?);
+        """, (new_order['metalId'], new_order['sizeId'], new_order['styleId'],
+            new_order['pieceId'], new_order['timestamp'], ))
 
-    # Add an `id` property to the order dictionary
-    order["id"] = new_id
+        id = db_cursor.lastrowid
 
-    # Add the order dictionary to the list
-    ORDERS.append(order)
+        new_order['id'] = id
 
-    # Return the dictionary with `id` property added
-    return order
+    return new_order
 
 
 def delete_order(id):
     """Function deletes a single order by id. arg of id"""
-    # Initial -1 value for order index, in case one isn't found
-    order_index = -1
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    # Iterate the ORDERS list, but use enumerate() so that you
-    # can access the index value of each item
-    for index, order in enumerate(ORDERS):
-        if order["id"] == id:
-            # Found the order. Store the current index.
-            order_index = index
-
-    # If the order was found, use pop(int) to remove it from list
-    if order_index >= 0:
-        ORDERS.pop(order_index)
+        db_cursor.execute("""
+        DELETE FROM orders
+        WHERE id = ?
+        """, (id, ))
 
 
 def update_order(id, new_order):
