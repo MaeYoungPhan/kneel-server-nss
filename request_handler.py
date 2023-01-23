@@ -167,16 +167,16 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         success = False
 
-        if resource == "Metals":
+        if resource == "metals":
             success = update_metal(id, post_body)
-        
-        if success:
-            self._set_headers(204)
-        else: 
-            self._set_headers(404)
 
-        # Encode the new resource and send in response
-        self.wfile.write("".encode())
+            if success:
+                self._set_headers(204)
+            else:
+                self._set_headers(404)
+
+            # Encode the new resource and send in response
+            self.wfile.write("".encode())
 
         # Update a single resource from the list
         elif resource == "orders":

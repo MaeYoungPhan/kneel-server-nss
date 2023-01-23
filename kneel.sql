@@ -65,4 +65,28 @@ INSERT INTO 'ORDERS' VALUES (null, 3, 1, 1, 2, 1614659931743);
 INSERT INTO 'ORDERS' VALUES (null, 2, 2, 3, 3, 1614659939643);
 INSERT INTO 'ORDERS' VALUES (null, 1, 3, 2, 1, 1614659931683);
 
-SELECT * FROM Metals
+SELECT * FROM metals
+
+SELECT
+    o.id,
+    o.metal_id,
+    o.size_id,
+    o.style_id,
+    o.piece_id,
+    o.timestamp,
+    m.metal metal_metal,
+    m.price metal_price,
+    s.carets size_carets,
+    s.price size_price,
+    t.style style_style,
+    t.price style_price,
+    p.type piece_type
+FROM Orders o
+JOIN Metals m
+    ON m.id = o.metal_id
+JOIN Sizes s
+    ON s.id = o.size_id
+JOIN Styles t
+    ON t.id = o.style_id
+JOIN Pieces p
+    ON p.id = o.piece_id
