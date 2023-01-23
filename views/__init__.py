@@ -11,3 +11,4 @@ from .order_requests import get_single_order
 from .order_requests import create_order
 from .order_requests import delete_order
 from .order_requests import update_order
+from .metal_requests import update_metal

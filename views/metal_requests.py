@@ -1,3 +1,6 @@
+import sqlite3
+import json
+
 METALS = [
     { "id": 1, "metal": "Sterling Silver", "price": 12.42 },
     { "id": 2, "metal": "14K Gold", "price": 736.4 },
@@ -26,3 +29,27 @@ def get_single_metal(id):
             requested_metal = metal
 
     return requested_metal
+
+def update_metal(id, metal_update):
+    """args int id, json string metal, function finds metal dictionary, replaces with new one """
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Metals
+            SET
+                metal = ?,
+                price = ?
+        WHERE id = ?
+        """, (metal_update['metal'], metal_update['price'], id, ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True

@@ -3,7 +3,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from views import get_all_pieces, get_all_styles, get_all_metals, get_all_orders, get_all_sizes
 from views import get_single_order, get_single_piece
 from views import get_single_metal, get_single_size, get_single_style
-from views import create_order, delete_order, update_order
+from views import create_order, delete_order, update_order, update_metal
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -165,15 +165,25 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
+        success = False
+
+        if resource == "Metals":
+            success = update_metal(id, post_body)
+        
+        if success:
+            self._set_headers(204)
+        else: 
+            self._set_headers(404)
+
+        # Encode the new resource and send in response
+        self.wfile.write("".encode())
+
         # Update a single resource from the list
-        if resource == "orders":
+        elif resource == "orders":
             self._set_headers(403)
             update_order(id, post_body)
             response = {"message": "Order has been accepted. Modification requires contacting the company directly."}
             self.wfile.write(json.dumps(response).encode())
-
-            # Encode the new resource and send in response
-            self.wfile.write("".encode())
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin
