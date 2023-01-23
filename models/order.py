@@ -10,3 +10,7 @@ class Order():
         self.style_id = style_id
         self.piece_id = piece_id
         self.timestamp = timestamp
+        self.metal = None
+        self.size = None
+        self.style = None
+        self.piece = None

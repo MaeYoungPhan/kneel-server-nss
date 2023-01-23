@@ -1,5 +1,6 @@
 import sqlite3
 import json
+from models import Metal
 
 METALS = [
     { "id": 1, "metal": "Sterling Silver", "price": 12.42 },
@@ -11,24 +12,53 @@ METALS = [
 
 def get_all_metals():
     """Returns list of dictionaries stored in METALS variable"""
-    return METALS
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        SELECT
+            m.id,
+            m.metal,
+            m.price
+        FROM metals m
+        """)
+
+        metals = []
+
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+
+            metal = Metal(row['id'], row['metal'], row['price'])
+
+            metals.append(metal.__dict__)
+
+    return metals
 
 
 # Function with a single parameter
 def get_single_metal(id):
     """arg: int id, function to return a single metal dictionary"""
-    # Variable to hold the found metal, if it exists
-    requested_metal = None
+    with sqlite3.connect("./kneeldiamonds.sqlite3") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
 
-    # Iterate the METALS list above. Very similar to the
-    # for..of loops you used in JavaScript.
-    for metal in METALS:
-        # Dictionaries in Python use [] notation to find a key
-        # instead of the dot notation that JavaScript used.
-        if metal["id"] == id:
-            requested_metal = metal
+        db_cursor.execute("""
+        SELECT
+            m.id,
+            m.metal,
+            m.price
+        FROM metals m
+        WHERE m.id = ?
+        """, ( id, ))
 
-    return requested_metal
+        # Load the single result into memory
+        data = db_cursor.fetchone()
+
+        metal = Metal(data['id'], data['metal'], data['price'])
+
+    return metal.__dict__
 
 def update_metal(id, metal_update):
     """args int id, json string metal, function finds metal dictionary, replaces with new one """

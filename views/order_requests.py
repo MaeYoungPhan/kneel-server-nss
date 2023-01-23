@@ -1,10 +1,6 @@
 import sqlite3
 import json
-from models import Order
-from .metal_requests import get_single_metal
-from .size_requests import get_single_size
-from .style_requests import get_single_style
-from .piece_requests import get_single_piece
+from models import Order, Metal, Size, Style, Piece
 
 ORDERS = [
     {
@@ -30,8 +26,23 @@ def get_all_orders():
             o.size_id,
             o.style_id,
             o.piece_id,
-            o.timestamp
-        FROM orders o
+            o.timestamp,
+            m.metal metals_metal,
+            m.price metals_price,
+            s.carets sizes_carets,
+            s.price sizes_price,
+            t.style styles_style,
+            t.price styles_price,
+            p.type pieces_type
+        FROM Orders o
+        JOIN Metals m
+            ON m.id = o.metal_id
+        JOIN Sizes s
+            ON s.id = o.size_id
+        JOIN Styles t
+            ON t.id = o.style_id
+        JOIN Pieces p
+            ON p.id = o.piece_id
         """)
 
         orders = []
@@ -42,6 +53,30 @@ def get_all_orders():
 
             order = Order(row['id'], row['metal_id'], row['size_id'],
                         row['style_id'], row['piece_id'], row['timestamp'])
+
+            metal = Metal(row['id'], row['metals_metal'], row['metals_price'])
+
+            del metal.id
+
+            size = Size(row['id'], row['sizes_carets'], row['sizes_price'])
+
+            del size.id
+
+            style = Style(row['id'], row['styles_style'], row['styles_price'])
+
+            del style.id
+
+            piece = Piece(row['id'], row['pieces_type'])
+
+            del piece.id
+
+            order.metal = metal.__dict__
+
+            order.size = size.__dict__
+
+            order.style = style.__dict__
+
+            order.piece = piece.__dict__
 
             orders.append(order.__dict__)
 
